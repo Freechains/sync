@@ -23,7 +23,6 @@ above)
 freechains chain \$sync post inline "peers lcc-uerj.duckdns.org ADD"
 freechains chain \$sync post inline "peers francisco-santanna.duckdns.org ADD"
 freechains chain \$sync post inline "chains # ADD"
-freechains chain \$sync post inline "chains #br ADD"
 freechains chain \$sync post inline "chains @7EA6E8E2DD5035AAD58AE761899D2150B9FB06F0C8ADC1B5FE817C4952AC06E6 ADD"
 ```
 
@@ -31,7 +30,7 @@ Follows the list of available commands:
 
 - `peers <addr:port> ADD`
 - `peers <addr:port> REM`
-- `chains <name> [<key>] ADD`
+- `chains <name> (<key> | ADD)`
 - `chains <name> REM`
 
 The tool interprets all existing posts in the chain from the oldest to newest
