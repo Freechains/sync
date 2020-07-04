@@ -35,11 +35,13 @@ fun main_sync (args: Array<String>) : Pair<Boolean,String> {
 
         assert_(cmds.size == 1) { "invalid number of arguments" }
         val store = Store(cmds[0], port)
-        Sync(store, CBs(
+        val sync  = Sync(store, CBs(
                 { n -> println("Synchronizing $n items...") },
                 { chain,action,ret -> println("    --> $chain $action ($ret)") },
                 { println("    --> DONE")}
         ))
+        Thread.sleep(5000) // wait store update
+        sync.sync_all()
         while (true);
         @Suppress("UNREACHABLE_CODE")
         Pair(true, "")
