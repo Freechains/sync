@@ -1,7 +1,7 @@
 # Sync Tool - Freechains
 
-The *sync tool* sets up a dedicated chain to persist peers and chains of
-interest to be replicated in the network.
+The *sync tool* sets up a dedicated chain to persist and replicate peers and
+chains of interest in the network.
 
 - A *sync chain* is just a normal chain, but it is recommended to be private
   so that only the key holders can read and write to it:
