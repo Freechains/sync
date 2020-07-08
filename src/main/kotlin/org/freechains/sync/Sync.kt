@@ -14,13 +14,13 @@ import kotlin.concurrent.thread
 data class CBs (
     val start: (Int) -> Unit,
     val item:  (String,String,Pair<Boolean,String>) -> Unit,
-    val end:   () -> Unit
+    val end:   (Int) -> Unit
 )
 
 val CBS = CBs (
     { _ -> Unit },
     { _,_,_ -> Unit },
-    {}
+    { _ -> Unit }
 )
 
 class Sync (store: Store, cbs: CBs) {
@@ -32,8 +32,8 @@ class Sync (store: Store, cbs: CBs) {
             if (v1 == "chains") {
                 when {
                     (v3 == "REM") -> main_cli(arrayOf(store.port_, "chains", "leave", v2))
-                    (v3 == "ADD") -> main_cli(arrayOf(store.port_, "chains", "join",  v2))
-                    else          -> main_cli(arrayOf(store.port_, "chains", "join",  v2, v3))
+                    (v3 == "ADD") -> main_cli(arrayOf(store.port_, "chains", "join", v2))
+                    else          -> main_cli(arrayOf(store.port_, "chains", "join", v2, v3))
                 }
             }
         }
@@ -41,23 +41,24 @@ class Sync (store: Store, cbs: CBs) {
             if (v3 != "REM") {
                 when (v1) {
                     "chains" -> thread { this.sync(this.store.getKeys("peers"), listOf(v2), listOf("recv")) }
-                    "peers"  -> thread { this.sync(listOf(v2), this.store.getKeys("chains"), listOf("recv","send")) }
+                    "peers"  -> thread { this.sync(listOf(v2), this.store.getKeys("chains"), listOf("recv", "send")) }
                 }
             }
         }
+    }
+
+    fun loop () {
         thread {
             this.sync_all()
         }
-        thread {
-            val socket = Socket("localhost", store.port)
-            val writer = DataOutputStream(socket.getOutputStream()!!)
-            val reader = DataInputStream(socket.getInputStream()!!)
-            writer.writeLineX("$PRE chains listen")
-            while (true) {
-                val (_,chain) = reader.readLineX().listSplit()
-                thread {
-                    this.sync(this.store.getKeys("peers"), listOf(chain), listOf("send"))
-                }
+        val socket = Socket("localhost", store.port)
+        val writer = DataOutputStream(socket.getOutputStream()!!)
+        val reader = DataInputStream(socket.getInputStream()!!)
+        writer.writeLineX("$PRE chains listen")
+        while (true) {
+            val (_,chain) = reader.readLineX().listSplit()
+            thread {
+                this.sync(this.store.getKeys("peers"), listOf(chain), listOf("send"))
             }
         }
     }
@@ -67,7 +68,8 @@ class Sync (store: Store, cbs: CBs) {
     }
 
     private fun sync (peers: List<String>, chains: List<String>, actions: List<String>) {
-        this.cbs.start(chains.size * peers.size * actions.size)
+        val n = chains.size * peers.size * actions.size
+        this.cbs.start(n)
         chains.map { chain ->
             thread {  // 1 thread for each chain (rest is sequential b/c of per-chain lock in the protocol)
                 for (action in actions) {
@@ -80,6 +82,6 @@ class Sync (store: Store, cbs: CBs) {
         }.map {
             it.join()
         }
-        this.cbs.end()
+        this.cbs.end(n)
     }
 }

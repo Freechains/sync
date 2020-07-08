@@ -34,16 +34,15 @@ fun main_sync (args: Array<String>) : Pair<Boolean,String> {
         val port = opts["--port"]?.toInt() ?: PORT_8330
 
         assert_(cmds.size == 1) { "invalid number of arguments" }
-        Sync (
+        val sync = Sync (
             Store(cmds[0], port),
             CBs (
-                { n -> println("Synchronizing $n items...") },
+                { n -> if (n>0) println("Synchronizing $n items...") },
                 { chain,action,ret -> println("    --> $chain $action ($ret)") },
-                { println("    --> DONE")}
+                { n -> if (n>0) println("    --> DONE") }
             )
         )
-        while (true);
-        @Suppress("UNREACHABLE_CODE")
+        sync.loop()
         Pair(true, "")
     }
 }
