@@ -23,8 +23,9 @@ val CBS = CBs (
     { _ -> Unit }
 )
 
-class Sync (store: Store, cbs: CBs) {
+class Sync (store: Store, peer: String?, cbs: CBs) {
     val store = store
+    val peer  = peer
     val cbs   = cbs
 
     init {
@@ -51,13 +52,20 @@ class Sync (store: Store, cbs: CBs) {
         for (chain in this.store.getKeys("chains")) {
             val v = this.store.data["chains"]!![chain]!!
             if (v == "ADD") {
-                main_cli(arrayOf(store.port_, "chains", "join", chain))
+                main_cli(arrayOf(this.store.port_, "chains", "join", chain))
             } else {
-                main_cli(arrayOf(store.port_, "chains", "join", chain, v))
+                main_cli(arrayOf(this.store.port_, "chains", "join", chain, v))
             }
         }
         thread {
-            this.sync_all()
+            while (true) {
+                //println("===== SYNC-ALL =====")
+                if (this.peer != null) {
+                    val v = main_cli(arrayOf(this.store.port_, "peer", this.peer, "recv", this.store.chain))
+                }
+                this.sync_all()
+                Thread.sleep(T30m_refresh)
+            }
         }
         val socket = Socket("localhost", store.port)
         val writer = DataOutputStream(socket.getOutputStream()!!)

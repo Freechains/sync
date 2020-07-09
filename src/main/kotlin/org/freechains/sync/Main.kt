@@ -1,5 +1,6 @@
 package org.freechains.sync
 
+import org.freechains.cli.main_cli
 import org.freechains.common.*
 import org.freechains.store.Store
 
@@ -7,7 +8,7 @@ val help = """
 freechains-sync $VERSION
 
 Usage:
-    freechains-sync <chain>
+    freechains-sync <chain> [<peer>]
 
 Options:
     --help          displays this help
@@ -31,14 +32,19 @@ fun main_sync_assert (args: Array<String>) : String {
 
 fun main_sync (args: Array<String>) : Pair<Boolean,String> {
     return main_catch_("freechains-sync", VERSION, help, args) { cmds, opts ->
-        val port = opts["--port"]?.toInt() ?: PORT_8330
+        assert_(cmds.size >= 1) { "invalid number of arguments" }
 
-        assert_(cmds.size == 1) { "invalid number of arguments" }
+        val port = opts["--port"]?.toInt() ?: PORT_8330
+        val port_ = "--port=$port"
+        val chain = cmds[0]
+
+        main_cli(arrayOf(port_, "chains", "join", chain))
         val sync = Sync (
-            Store(cmds[0], port),
+            Store(chain, port),
+            if (cmds.size==1) null else cmds[1],
             CBs (
                 { n -> if (n>0) println("Synchronizing $n items...") },
-                { peer,action,chain,ret -> println("    --> $peer $action $chain ($ret)") },
+                { p,a,c,r -> println("    --> $p $a $c ($r)") },
                 { n -> if (n>0) println("    --> DONE") }
             )
         )
