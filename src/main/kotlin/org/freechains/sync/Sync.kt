@@ -11,6 +11,8 @@ import java.net.NetworkInterface
 import java.net.Socket
 import kotlin.concurrent.thread
 
+const val T30m_refresh = 30*min
+
 data class CBs (
     val start: (Int) -> Unit,
     val item:  (String,String,String,Pair<Boolean,String>) -> Unit,
@@ -61,7 +63,7 @@ class Sync (store: Store, peer: String?, cbs: CBs) {
             while (true) {
                 //println("===== SYNC-ALL =====")
                 if (this.peer != null) {
-                    val v = main_cli(arrayOf(this.store.port_, "peer", this.peer, "recv", this.store.chain))
+                    main_cli(arrayOf(this.store.port_, "peer", this.peer, "recv", this.store.chain))
                 }
                 this.sync_all()
                 Thread.sleep(T30m_refresh)
