@@ -38,7 +38,7 @@ fun main_sync (args: Array<String>) : Pair<Boolean,String> {
             Store(cmds[0], port),
             CBs (
                 { n -> if (n>0) println("Synchronizing $n items...") },
-                { chain,action,ret -> println("    --> $chain $action ($ret)") },
+                { peer,action,chain,ret -> println("    --> $peer $action $chain ($ret)") },
                 { n -> if (n>0) println("    --> DONE") }
             )
         )

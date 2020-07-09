@@ -13,13 +13,13 @@ import kotlin.concurrent.thread
 
 data class CBs (
     val start: (Int) -> Unit,
-    val item:  (String,String,Pair<Boolean,String>) -> Unit,
+    val item:  (String,String,String,Pair<Boolean,String>) -> Unit,
     val end:   (Int) -> Unit
 )
 
 val CBS = CBs (
     { _ -> Unit },
-    { _,_,_ -> Unit },
+    { _,_,_,_ -> Unit },
     { _ -> Unit }
 )
 
@@ -31,7 +31,7 @@ class Sync (store: Store, cbs: CBs) {
         store.cbs.add { v1,v2,v3 ->
             if (v1 == "chains") {
                 when {
-                    (v3 == "REM") -> main_cli(arrayOf(store.port_, "chains", "leave", v2))
+                    //(v3 == "REM") -> main_cli(arrayOf(store.port_, "chains", "leave", v2))
                     (v3 == "ADD") -> main_cli(arrayOf(store.port_, "chains", "join", v2))
                     else          -> main_cli(arrayOf(store.port_, "chains", "join", v2, v3))
                 }
@@ -48,6 +48,14 @@ class Sync (store: Store, cbs: CBs) {
     }
 
     fun loop () {
+        for (chain in this.store.getKeys("chains")) {
+            val v = this.store.data["chains"]!![chain]!!
+            if (v == "ADD") {
+                main_cli(arrayOf(store.port_, "chains", "join", chain))
+            } else {
+                main_cli(arrayOf(store.port_, "chains", "join", chain, v))
+            }
+        }
         thread {
             this.sync_all()
         }
@@ -75,7 +83,7 @@ class Sync (store: Store, cbs: CBs) {
                 for (action in actions) {
                     for (peer in peers) {
                         val ret = main_cli(arrayOf(this.store.port_, "peer", peer, action, chain))
-                        this.cbs.item(chain,action,ret)
+                        this.cbs.item(peer,action,chain,ret)
                     }
                 }
             }
